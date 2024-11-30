@@ -1,15 +1,7 @@
 <template>
   <v-card>
-    <v-toolbar color="white" flat>
-      <v-btn icon light>
-        <v-icon color="grey darken-2">mdi-arrow-left</v-icon>
-      </v-btn>
-
-      <v-toolbar-title class="grey--text text--darken-4">
-        Instituições
-      </v-toolbar-title>
-
-      <v-spacer></v-spacer>
+    <v-toolbar color="orange-lighten-1" dark>
+      <v-toolbar-title> Cadastro das Instituições</v-toolbar-title>
     </v-toolbar>
 
     <v-container fluid>
@@ -42,7 +34,7 @@
           label="Endereço"
         ></v-text-field>
 
-        <v-btn :disabled="!valid" color="success" class="mr-4" @click="submit">
+        <v-btn color="success" class="mr-4" block @click="submit">
           Salvar
         </v-btn>
       </v-form>
@@ -53,7 +45,6 @@
       :items="instituicoes"
       :items-per-page="5"
       class="elevation-1"
-      @click:row="editarInstituicao"
     >
       <template #item.acao="{ item }">
         <v-btn icon color="red" @click.stop="deletarInstituicao(item)">
@@ -69,7 +60,6 @@ export default {
   data: () => ({
     valid: true,
     instituicao: {
-      id: null,
       nome: "",
       responsavel: "",
       email: "",
@@ -96,35 +86,23 @@ export default {
   }),
 
   methods: {
-    async carregarInstituicoes() {
-      try {
-        const response = await this.$axios.get(
-          "https://localhost:5258/Instituicao"
-        );
-        this.instituicoes = response.data;
-      } catch (error) {
-        console.error("Erro ao carregar instituições:", error);
-      }
-    },
-
     async submit() {
       try {
         if (this.instituicao.id) {
-          // Editar instituição existente
-          await this.$axios.put(
-            `https://localhost:5258/Instituicao/${this.instituicao.id}`,
-            this.instituicao
-          );
+          await this.$axios({
+            method: "PUT",
+            url: `http://localhost:5258/Instituicao/${this.instituicao.id}`,
+            data: this.instituicao,
+          });
         } else {
-          // Criar nova instituição
-          await this.$axios.post(
-            "https://localhost:5258/Instituicao",
-            this.instituicao
-          );
+          await this.$axios({
+            method: "POST",
+            url: "http://localhost:5258/Instituicao",
+            data: this.instituicao,
+          });
         }
 
         this.instituicao = {
-          id: null,
           nome: "",
           responsavel: "",
           email: "",
@@ -132,22 +110,33 @@ export default {
           endereco: "",
         };
 
-        await this.carregarInstituicoes();
+        this.carregarInstituicoes();
       } catch (error) {
         console.error("Erro ao salvar instituição:", error);
       }
     },
 
-    editarInstituicao(item) {
-      this.instituicao = { ...item };
+    async carregarInstituicoes() {
+      try {
+        const response = await this.$axios({
+          method: "GET",
+          url: "http://localhost:5258/Instituicao",
+        });
+
+        this.instituicoes = response.data;
+      } catch (error) {
+        console.error("Erro ao carregar instituições:", error);
+      }
     },
 
     async deletarInstituicao(item) {
       try {
-        await this.$axios.delete(
-          `https://localhost:5258/Instituicao/${item.id}`
-        );
-        await this.carregarInstituicoes();
+        await this.$axios({
+          method: "DELETE",
+          url: `http://localhost:5258/Instituicao/${item.id}`,
+        });
+
+        this.carregarInstituicoes();
       } catch (error) {
         console.error("Erro ao deletar instituição:", error);
       }
